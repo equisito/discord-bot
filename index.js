@@ -6,7 +6,6 @@ const {
   REST,
   Routes
 } = require("discord.js");
-const fs = require("fs");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -15,24 +14,28 @@ const client = new Client({
 const THUMBNAIL_URL =
   "https://cdn.discordapp.com/attachments/1338727950626983936/1338733255905513553/Bunker_Leaks_Text.png?ex=696b1480&is=6969c300&hm=55f4e3cf3b499dca8465d8bb50d3ab8c9a9b50c95e441b57597f7705ec26d837&";
 
-// ===== Simple vouch counter =====
-const COUNTER_FILE = "./vouchCount.json";
-let vouchCount = fs.existsSync(COUNTER_FILE)
-  ? JSON.parse(fs.readFileSync(COUNTER_FILE, "utf8")).count
-  : 1899;
-
-const saveCount = () =>
-  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: vouchCount }));
-
-// ===== Slash Command =====
 const commands = [
   new SlashCommandBuilder()
     .setName("vouch")
     .setDescription("Leave a vouch for the server")
     .addStringOption(option =>
       option
+        .setName("product")
+        .setDescription("Product purchased")
+        .setRequired(true)
+        .addChoices(
+          { name: "PC Optimization", value: "PC Optimization" },
+          { name: "VIP", value: "VIP" },
+          { name: "Perm Booster", value: "Perm Booster" },
+          { name: "Server Promo", value: "Server Promo" },
+          { name: "Real Members", value: "Real Members" },
+          { name: "Discord Service", value: "Discord Service" }
+        )
+    )
+    .addStringOption(option =>
+      option
         .setName("message")
-        .setDescription("What are you vouching for?")
+        .setDescription("Your experience / review")
         .setRequired(true)
     )
     .addStringOption(option =>
@@ -67,12 +70,10 @@ client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "vouch") {
+    const product = interaction.options.getString("product");
     const message = interaction.options.getString("message");
     const stars = interaction.options.getString("stars");
     const proof = interaction.options.getAttachment("proof");
-
-    vouchCount++;
-    saveCount();
 
     const starDisplay = "⭐".repeat(Number(stars));
 
@@ -81,8 +82,8 @@ client.on("interactionCreate", async interaction => {
       .setTitle("Vouch Submitted")
       .setDescription(starDisplay)
       .addFields(
+        { name: "Product:", value: product },
         { name: "Vouch:", value: message },
-        { name: "Vouch Nº:", value: `${vouchCount}`, inline: true },
         { name: "Vouched by:", value: `<@${interaction.user.id}>`, inline: true },
         {
           name: "Vouched at:",
